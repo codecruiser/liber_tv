@@ -1,0 +1,4 @@
+.tile_category {
+    border: 1px solid #990000;
+    font-size: 22px;
+}
