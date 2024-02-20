@@ -1,6 +1,6 @@
 import sys
 
-from PySide6 import QtWidgets
+from PySide2 import QtWidgets
 
 from libertv.main_window import MainWindow
 
@@ -14,4 +14,4 @@ if __name__ == "__main__":
     widget.showFullScreen()
     widget.show()
 
-    sys.exit(app.exec())
+    sys.exit(app.exec_())
