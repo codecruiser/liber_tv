@@ -28,11 +28,14 @@ class MainWindow(QWidget):
         mod = event.modifiers()
 
         current_panel = self._stacked_layout.itemAt(self._stacked_layout.currentIndex()).widget()
+
         if mod == QtCore.Qt.ControlModifier and key == QtCore.Qt.Key_Left:
             self._go_left()
         elif mod == QtCore.Qt.ControlModifier and key == QtCore.Qt.Key_Right:
+            print("UUUU")
             self._go_right()
         elif key == QtCore.Qt.Key_Right:
+            print("ttt")
             if hasattr(current_panel, "go_right"):
                 current_panel.go_right()
         elif key == QtCore.Qt.Key_Left:
@@ -58,9 +61,6 @@ class MainWindow(QWidget):
                 current_panel.go_up()
         elif mod == QtCore.Qt.ControlModifier and key == QtCore.Qt.Key_C:
             QApplication.quit()
-        elif key == QtCore.Qt.Key_P:
-            if hasattr(current_panel, "go_p_key"):
-                current_panel.go_p_key()
         elif key == QtCore.Qt.Key_K:
             if hasattr(current_panel, "go_k_key"):
                 current_panel.go_k_key()

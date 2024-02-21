@@ -131,6 +131,13 @@ class LibrePlayer(QWidget):
             self.time_counter.show()
             self.status_label.show()
 
+    def go_right(self):
+        print("zzz")
+        print(self.player.position())
+        #self.player.setPosition(self.player.position())
+
+    def go_left(self):
+        pass
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

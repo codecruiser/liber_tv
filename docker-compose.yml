@@ -1,0 +1,12 @@
+version: '3'
+services:
+  liber_tv_db:
+    image: 'postgres:latest'
+    ports:
+      - 5442:5432
+    environment:
+      POSTGRES_USER: libertv
+      POSTGRES_PASSWORD: libertv
+      POSTGRES_DB: libertv
+    volumes:
+      - ./db-data/:/var/lib/postgresql/data/
