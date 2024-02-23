@@ -15,6 +15,9 @@ class Category(models.Model):
         verbose_name = "category"
         verbose_name_plural = "categories"
 
+    def __str__(self):
+        return self.name
+
 
 class Series(models.Model):
     """
@@ -28,8 +31,11 @@ class Series(models.Model):
     class Meta:
         db_table = "libertv_series"
         ordering = ["position"]
-        verbose_name = "serie"
+        verbose_name = "series"
         verbose_name_plural = "series"
+
+    def __str__(self):
+        return self.name
 
 
 class Tag(models.Model):
@@ -44,6 +50,9 @@ class Tag(models.Model):
         verbose_name = "tag"
         verbose_name_plural = "tags"
 
+    def __str__(self):
+        return self.name
+
 
 class TagCategory(models.Model):
     """
@@ -57,6 +66,25 @@ class TagCategory(models.Model):
         verbose_name = "tag category"
         verbose_name_plural = "tag categories"
 
+    def __str__(self):
+        return self.name
+
+
+class ItemType(models.Model):
+    """
+    Represents type of the item. It can be either player stream, video or just url.
+    """
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "libertv_item_types"
+        ordering = ["name"]
+        verbose_name = "item type"
+        verbose_name_plural = "item types"
+
+    def __str__(self):
+        return self.name
+
 
 class Item(models.Model):
     """
@@ -66,15 +94,19 @@ class Item(models.Model):
     name = models.CharField(max_length=255)
     title = models.CharField(max_length=510)
     description = models.TextField(null=True)
-    action = models.CharField(max_length=100, null=True)
     address = models.CharField(max_length=2048, null=True)
+    data = models.JSONField(null=True)
     position = models.IntegerField()
-    series = models.ManyToManyField(Series, on_delete=models.CASCADE, null=True)
-    categories = models.ManyToManyField(Category, on_delete=models.CASCADE, null=True)
-    tags = models.ManyToManyField(Tag, on_delete=models.CASCADE, null=True)
+    type = models.ForeignKey(ItemType, on_delete=models.CASCADE)
+    series = models.ManyToManyField(Series, null=True)
+    categories = models.ManyToManyField(Category, null=True)
+    tags = models.ManyToManyField(Tag, null=True)
 
     class Meta:
         db_table = "libertv_items"
         ordering = ["position"]
         verbose_name = "item"
         verbose_name_plural = "items"
+
+    def __str__(self):
+        return self.name
