@@ -1,2 +1,2 @@
-pyside2==5.15.2.1
+pyside6
 django==4.2.10

@@ -1,11 +1,11 @@
-from PySide2 import QtGui, QtCore
+from PySide6 import QtGui, QtCore
 import sys
 
-from PySide2.QtCore import QUrl, QSize, QSizeF, Qt
-from PySide2.QtGui import QColor, QBrush
-from PySide2.QtMultimedia import QMediaPlayer
-from PySide2.QtMultimediaWidgets import QVideoWidget, QGraphicsVideoItem
-from PySide2.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QApplication, QGraphicsTextItem, QGraphicsRectItem
+from PySide6.QtCore import QUrl, QSize, QSizeF, Qt
+from PySide6.QtGui import QColor, QBrush
+from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
+from PySide6.QtMultimediaWidgets import QVideoWidget, QGraphicsVideoItem
+from PySide6.QtWidgets import QWidget, QGraphicsScene, QGraphicsView, QApplication, QGraphicsTextItem, QGraphicsRectItem
 
 
 class LibrePlayer(QWidget):
@@ -17,16 +17,19 @@ class LibrePlayer(QWidget):
     def __init__(self):
         super().__init__()
         self.player = QMediaPlayer()
-        self.showMaximized()
+        self.audio_output = QAudioOutput()
+        self.audio_output.setVolume(50)
+        self.player.setAudioOutput(self.audio_output)
+        #self.showMaximized()
         size = self.screen().availableGeometry().size()
         self.setContentsMargins(0, 0, 0, 0)
 
         # attach signals
-        self.player.bufferStatusChanged.connect(self.check_buffer)
+        self.player.bufferProgressChanged.connect(self.call_buffer_progress)
         self.player.positionChanged.connect(self.position_changed)
-        self.player.playbackRateChanged.connect(self.playback_rate)
-        self.player.volumeChanged.connect(self.volume_changed)
-        self.player.error.connect(self.callback_error)
+        self.player.durationChanged.connect(self.callback_duration)
+        self.player.playbackRateChanged.connect(self.callback_playback_rate)
+        self.player.errorOccurred.connect(self.callback_error)
 
         self.video_widget = QGraphicsVideoItem()
         self.video_widget.setSize(QSize(size.width(), size.height()))
@@ -55,7 +58,7 @@ class LibrePlayer(QWidget):
 
         self.time_counter = QGraphicsTextItem()
         self.time_counter.setDefaultTextColor(QColor(250, 250, 250, 255))
-        self.time_counter.setX(1200)
+        self.time_counter.setX(1000)
         self.time_counter.setY(size.height()-100)
         self.time_counter.setHtml(self.timer_template.format("--:--:--", "--:--:--"))
         self.scene.addItem(self.time_counter)
@@ -78,7 +81,7 @@ class LibrePlayer(QWidget):
         self.scene.addItem(rect)
 
     def play(self, url):
-        self.player.setMedia(QUrl(url))
+        self.player.setSource(QUrl(url))
         self.player.play()
 
     def toggle_play(self):
@@ -89,7 +92,7 @@ class LibrePlayer(QWidget):
             self.player.play()
             self.status_label.setHtml(self.status_template.format("\u23F5"))
 
-    def check_buffer(self, m):
+    def call_buffer_progress(self, m):
         if m < 100:
             self.status_label.setHtml(self.status_template.format("\u23F3"))
         else:
@@ -97,24 +100,38 @@ class LibrePlayer(QWidget):
         self.bufor_label.setHtml(self.bufor_template.format(f"{m}% wczytano"))
 
     def position_changed(self, ms):
+        # current time
         base_sek = ms//1000
         sek = base_sek % 60
         base_min = base_sek//60
         min = base_min % 60
         hr = base_min // 60
-        self.time_counter.setHtml(self.timer_template.format(f"{hr:02d}:{min:02d}:{sek:02d}", "--:--:--"))
 
-    def playback_rate(self, m):
+        # duration time
+        base_dursek = self.duration // 1000
+        dursek = base_dursek % 60
+        base_durmin = base_dursek // 60
+        durmin = base_durmin % 60
+        durhr = base_durmin // 60
+
+        self.time_counter.setHtml(
+            self.timer_template.format(f"{hr:02d}:{min:02d}:{sek:02d}", f"{durhr:02d}:{durmin:02d}:{dursek:02d}")
+        )
+
+    def callback_duration(self, duration):
+        self.duration = duration
+
+    def callback_playback_rate(self, m):
         print(m)
 
     def volume_changed(self, m):
         print(m)
 
-    def callback_error(self, error):
-        self.bufor_label.setHtml(self.bufor_template.format(error))
+    def callback_error(self, error, error_string):
+        self.bufor_label.setHtml(self.bufor_template.format(error_string))
 
     def go_p(self):
-        # stream test
+        # stream testyt
         # self.play(
         #     "https://stream-10.ix7.dailymotion.com/sec(1nXeBFcLxi2SiPaUv6X4gaw8c7wOaljv1iTukzy7oAAX74B8jqyrK4VEIPLXnCr-)/dm/3/x3b68jn/d/live-2.m3u8#cell=lcore"
         # )
@@ -134,14 +151,7 @@ class LibrePlayer(QWidget):
     def go_right(self):
         print("zzz")
         print(self.player.position())
-        #self.player.setPosition(self.player.position())
+        #self.player.setPosition(self.player.position()+10)
 
     def go_left(self):
         pass
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    libre_player = LibrePlayer()
-    #libre_player.play("https://vod.idnes.cz/a/2402/14/VF240214_120155_flv_high_iri.mp4")
-    libre_player.play("https://stream-10.ix7.dailymotion.com/sec(1nXeBFcLxi2SiPaUv6X4gaw8c7wOaljv1iTukzy7oAAX74B8jqyrK4VEIPLXnCr-)/dm/3/x3b68jn/d/live-2.m3u8#cell=lcore")
-    sys.exit(app.exec_())
