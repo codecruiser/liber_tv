@@ -26,6 +26,7 @@ class Series(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(null=True)
     position = models.IntegerField()
+    address = models.CharField(max_length=2048, null=True)
     parent = models.ForeignKey("Series", on_delete=models.CASCADE, null=True, blank=True)
     categories = models.ManyToManyField(Category, null=True)
     tags = models.ManyToManyField("Tag", null=True)
