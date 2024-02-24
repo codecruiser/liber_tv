@@ -20,7 +20,7 @@ class LibrePlayer(QWidget):
         self.audio_output = QAudioOutput()
         self.audio_output.setVolume(50)
         self.player.setAudioOutput(self.audio_output)
-        #self.showMaximized()
+        self.showMaximized()
         size = self.screen().availableGeometry().size()
         self.setContentsMargins(0, 0, 0, 0)
 
