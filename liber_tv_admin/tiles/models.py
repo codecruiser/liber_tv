@@ -27,6 +27,8 @@ class Series(models.Model):
     description = models.TextField(null=True)
     position = models.IntegerField()
     parent = models.ForeignKey("Series", on_delete=models.CASCADE, null=True, blank=True)
+    categories = models.ManyToManyField(Category, null=True)
+    tags = models.ManyToManyField("Tag", null=True)
 
     class Meta:
         db_table = "libertv_series"
