@@ -10,7 +10,7 @@ if __name__ == "__main__":
         app.setStyleSheet(f.read())
     widget = MainWindow()
     widget.resize(800, 600)
-    #widget.showMaximized()
+    widget.showMaximized()
     widget.showFullScreen()
     widget.show()
 

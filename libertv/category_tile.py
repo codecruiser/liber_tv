@@ -13,9 +13,13 @@ class CategoryTile(QWidget):
         self._img.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._img.setMinimumSize(100, 100)
         self._pixmap = QPixmap("images/category_test.png")
-        self._pixmap = self._pixmap.scaledToWidth(200)
+        #self._pixmap = self._pixmap.scaledToWidth(200)
+        size = self.screen().availableGeometry().size()
         #self._img.setPixmap(self._pixmap.scaled(self._img.frameSize(), Qt.AspectRatioMode.KeepAspectRatio))
-        self._img.setPixmap(self._pixmap)
+        self._img.setPixmap(
+            self._pixmap.scaled(QtCore.QSize((size.width()//6)-30, size.height()), Qt.AspectRatioMode.KeepAspectRatio)
+        )
+        #self._img.setPixmap(self._pixmap)
         self._img.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
 #         self._img.setStyleSheet("""QLabel {
 #     border: 1px solid #333333;
