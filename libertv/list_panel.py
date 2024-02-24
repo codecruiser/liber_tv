@@ -83,13 +83,13 @@ class ListPanel(QWidget):
             col += 1
 
         category_tiles = self.db.get_categories(parent_id=self.parent_id)
-        for tile in category_tiles*10:
+        for tile in category_tiles*10:  # 10 times is just for now
             category = CategoryTile(f"{tile['name']}")
             category.setStyleSheet("QWidget {border: 1px solid #990000;height: 300px;}")
             #category.setStyleSheet(self.css_normal_tile)
             #category.setProperty("class", "tile_category")
             category.setMinimumWidth(128)
-            category.setMinimumHeight(100)
+            #category.setMinimumHeight(100)
             self.tiles.append(category)
             self._flow_layout.addWidget(category, row, col)
 
