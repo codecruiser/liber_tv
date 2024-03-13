@@ -1,12 +1,12 @@
 from PySide6 import QtCore
-from PySide6.QtWidgets import QWidget, QScrollArea, QLabel, QVBoxLayout, QGridLayout, QFrame, QSizePolicy
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget, QScrollArea, QLabel, QVBoxLayout, QGridLayout, QFrame, QSizePolicy, QHBoxLayout
 
-from libertv.back_tile import BackTile
+from libertv.tiles.back import BackTile
 from libertv.tiles.category import CategoryTile
 from libertv.collector_tile import CollectorTile
 from libertv.db import LiberDB
 from libertv.item_tile import ItemTile
-from libertv.toolbox.flow_layout import FlowLayout
 
 
 class ListPanel(QWidget):
@@ -17,8 +17,9 @@ class ListPanel(QWidget):
     tiles_in_row = None
 
     parent_id = None
-    parent_tile = None
-    parent_parent_tile = None
+    parent_type = None
+    parent_parent_id = None
+    parent_parent_type = None
 
     css_normal_tile = "QWidget {font-size: 18px; padding-bottom: 10px; border-radius: 20px;}"
     css_normal_category_tile = (
@@ -47,16 +48,21 @@ class ListPanel(QWidget):
         self._title_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         self._vbox.addWidget(self._title_label)
 
-        self._flow_layout = QGridLayout()
-        self.add_tiles()
+        # self._widget = QWidget()
+
+        self._rows = QVBoxLayout()
+        self.flow_keeper = QWidget()
+
+        self.fill_panel(self.get_tiles())
+        # self._widget.setLayout(self._rows)
 
         self._scroll_area = QScrollArea()
         self._scroll_position = 0
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
-        flow_keeper = QWidget()
-        flow_keeper.setSizePolicy(sizePolicy)
-        flow_keeper.setLayout(self._flow_layout)
-        self._scroll_area.setWidget(flow_keeper)
+        # self.flow_keeper.setStyleSheet("QWidget {border: 2px solid #ff0000;}")
+        self.flow_keeper.setSizePolicy(sizePolicy)
+        self.flow_keeper.setLayout(self._rows)
+        self._scroll_area.setWidget(self.flow_keeper)
         self._scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
@@ -64,15 +70,121 @@ class ListPanel(QWidget):
 
         self.setLayout(self._vbox)
 
+    tile_height = 150
+
+    def get_back_tile(self):
+        size = self.screen().availableGeometry().size()
+        back = BackTile(f"Back")
+        back.tid = self.parent_parent_id
+        back.type = self.parent_parent_type
+        back.setStyleSheet(self.css_normal_tile)
+        back.setProperty("class", "tile_collector")
+        back.setMaximumWidth(size.width() // self.tiles_in_row - 20)
+        back.setMinimumWidth(size.width() // self.tiles_in_row - 20)
+        back.setMaximumHeight(self.tile_height)
+        back.setMinimumHeight(self.tile_height)
+        return back
+
+    def get_tiles(self, parent=None):
+        size = self.screen().availableGeometry().size()
+
+        tiles = []
+        if self.parent_id:
+            tiles.append(self.get_back_tile())
+        category_tiles = self.db.get_categories(parent_id=self.parent_id)
+        for tile in category_tiles*20:
+            category = CategoryTile(f"{tile['name']}", size)
+            category.tid = tile['id']
+            category.type = "category"
+            category.setStyleSheet(self.css_normal_category_tile)
+            category.setMaximumWidth(size.width() // self.tiles_in_row - 20)
+            category.setMinimumWidth(size.width() // self.tiles_in_row - 20)
+            category.setMaximumHeight(self.tile_height)
+            category.setMinimumHeight(self.tile_height)
+            tiles.append(category)
+
+        return tiles
+
+    def insert_label(self, j):
+        size = self.screen().availableGeometry().size()
+
+        label = QLabel(f"Col {j}")
+        label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        label.setStyleSheet(self.css_normal_category_tile)
+        label.setMaximumWidth(size.width() // self.tiles_in_row - 20)
+        label.setMinimumWidth(size.width() // self.tiles_in_row - 20)
+        label.setMaximumHeight(self.tile_height)
+        label.setMinimumHeight(self.tile_height)
+        return label
+
+    def fill_in_row(self, tiles):
+        widget = QWidget()
+        # widget.setStyleSheet("QWidget {border: 2px solid #00ff00;}")
+        # self.widget_row.append(widget)
+
+        cols = QHBoxLayout()
+        # self.rows.append(cols)
+        for item in tiles:
+            # item = self.insert_label(j)
+            # self.items.append(item)
+            cols.addWidget(item)
+            self.tiles.append(item)
+        widget.setLayout(cols)
+
+        return widget
+
+    def fill_panel(self, items):
+        self.empty_panel()
+        self.tiles = []
+        # count = 1
+        rows_count = 0
+        current_row = None
+        for tile in self.get_tiles():
+            if rows_count == 0 or rows_count % 6 == 0:
+                widget = QWidget()
+                current_row = QHBoxLayout()
+                widget.setLayout(current_row)
+                self._rows.addWidget(widget)
+            if current_row:
+                current_row.addWidget(tile, 0, Qt.Alignment.AlignLeft)
+                self.tiles.append(tile)
+            rows_count += 1
+        if rows_count % 6 != 0:
+            current_row.addStretch()
+        # tiles = self.get_tiles()
+        # for i in range(0, len(tiles) + 1, self.tiles_in_row):
+        #     count += 6
+        #     self._rows.addWidget(self.fill_in_row(tiles[i:count]))
+        self.flow_keeper.setFixedHeight((self.tile_height + 20) * self._rows.count())
+        self.set_current_tile()
+
+    def empty_panel(self):
+        for i in reversed(range(self._rows.count())):
+            for j in reversed(self._rows.itemAt(i).widget().children()):
+                j.deleteLater()
+            self._rows.itemAt(i).widget().deleteLater()
+            self._rows.removeItem(self._rows.itemAt(i))
+        #     for j in reversed(range(pp.count())):
+        #         print(pp.itemAt(j).widget())
+        #     #self._rows.itemAt(i).widget().deleteLater()
+
+    def go_p(self):
+        self.fill_panel(2)
+
     def add_tiles(self):
         size = self.screen().availableGeometry().size()
 
+        # remove children first
+        while ((child := self._flow_layout.takeAt(0)) != None):
+            child.widget().hide()
+            child.widget().setParent(None)
+            self._flow_layout.removeWidget(child.widget())
+            #child.widget().deleteLater()
+
+        print(self._flow_layout.columnCount())
+        print(self._flow_layout.rowCount())
         self.tiles = []
         self.current_tile_idx = 0
-
-        # remove children first
-        for child in self._flow_layout.children():
-            self._flow_layout.removeWidget(child)
 
         counter = 0
         row = 0
@@ -80,11 +192,14 @@ class ListPanel(QWidget):
 
         if self.parent_id:  # TODO: give it a real condition
             back = BackTile(f"Back")
+            back.tid = self.parent_parent_id
+            back.type = self.parent_parent_type
             back.setStyleSheet(self.css_normal_tile)
             back.setProperty("class", "tile_collector")
             back.setMinimumWidth(100)
             back.setMinimumHeight(200)
             self.tiles.append(back)
+            back.show()
             self._flow_layout.addWidget(back, row, col)
 
             counter += 1
@@ -96,16 +211,15 @@ class ListPanel(QWidget):
             category.tid = tile['id']
             category.type = "category"
             category.setStyleSheet(self.css_normal_category_tile)
-            #category.setStyleSheet(self.css_normal_tile)
-            #category.setProperty("class", "tile_category")
-            category.setMinimumWidth(size.width()//6-30)
+            category.setMinimumWidth(size.width()//self.tiles_in_row-30)
             category.setMinimumHeight(150)
             self.tiles.append(category)
+            category.show()
             self._flow_layout.addWidget(category, row, col)
 
             counter += 1
             col += 1
-            if counter % 6 == 0:
+            if counter % self.tiles_in_row == 0:
                 row += 1
                 col = 0
 
@@ -121,7 +235,7 @@ class ListPanel(QWidget):
 
             counter += 1
             col += 1
-            if counter % 6 == 0:
+            if counter % self.tiles_in_row == 0:
                 row += 1
                 col = 0
 
@@ -137,19 +251,18 @@ class ListPanel(QWidget):
 
             counter += 1
             col += 1
-            if counter % 6 == 0:
+            if counter % self.tiles_in_row == 0:
                 row += 1
                 col = 0
         self.set_current_tile()
 
     def move_scroll(self, up=False):
-        print("AAA")
         size = self._scroll_area.screen().availableGeometry().size()
         scroll_position = self._scroll_area.verticalScrollBar().value()
         tile_height = self.tiles[self.current_tile_idx].height()
-        tile_y = self.tiles[self.current_tile_idx].y()
+        tile_y = self.tiles[self.current_tile_idx].parent().y()
         print(size)
-        print(self.tiles[self.current_tile_idx].y(), ':', self.tiles[self.current_tile_idx].height())
+        print(self.tiles[self.current_tile_idx].parent().y(), ':', self.tiles[self.current_tile_idx].height())
         if up and scroll_position > tile_y:
             self._scroll_area.verticalScrollBar().setValue(scroll_position - tile_height)
         elif not up and size.height() < tile_y + tile_height:
@@ -160,12 +273,16 @@ class ListPanel(QWidget):
             tile.setStyleSheet(self.css_normal_category_tile)
 
     def set_current_tile(self):
-        self.tiles[self.current_tile_idx].setStyleSheet(self.css_selected_category_tile)
+        if self.tiles:
+            print(f":::{self.current_tile_idx}:::")
+            self.tiles[self.current_tile_idx].setStyleSheet(self.css_selected_category_tile)
 
     def go_enter_key(self):
+        self.parent_parent_id = self.parent_id
+        self.parent_parent_type = self.parent_type
         self.parent_id = self.tiles[self.current_tile_idx].tid
         self.parent_type = self.tiles[self.current_tile_idx].type
-        self.add_tiles()
+        self.fill_panel(self.get_tiles())
 
     def go_right(self):
         if self.current_tile_idx < len(self.tiles) - 1:
@@ -185,16 +302,10 @@ class ListPanel(QWidget):
         self.set_current_tile()
 
     def go_down(self):
+        self.reset_tiles()
         if self.current_tile_idx + self.tiles_in_row < len(self.tiles):
             self.current_tile_idx += self.tiles_in_row
-        self.reset_tiles()
         self.set_current_tile()
-        # TODO: get position by real position of scrolled area
-        pixels = 105
-        if self._scroll_position > 0:
-            pass
-        self._scroll_position += pixels
-        self._scroll_area.scroll(0, pixels)
         self.move_scroll()
 
     def go_shift_down(self):
@@ -214,14 +325,6 @@ class ListPanel(QWidget):
             self.current_tile_idx -= self.tiles_in_row
         self.reset_tiles()
         self.set_current_tile()
-        # TODO: get position by real position of scrolled area
-        pixels = -105
-        if self._scroll_position < 0:
-            self._scroll_area.scroll(0, self._scroll_position)
-            self._scroll_position = 0
-        else:
-            self._scroll_position -= pixels
-            self._scroll_area.scroll(0, pixels)
         self.move_scroll(True)
 
     def go_shift_up(self):
