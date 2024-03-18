@@ -136,7 +136,6 @@ class ListPanel(QWidget):
     def fill_panel(self, items):
         self.empty_panel()
         self.tiles = []
-        # count = 1
         rows_count = 0
         current_row = None
         for tile in self.get_tiles():
@@ -151,10 +150,6 @@ class ListPanel(QWidget):
             rows_count += 1
         if rows_count % 6 != 0:
             current_row.addStretch()
-        # tiles = self.get_tiles()
-        # for i in range(0, len(tiles) + 1, self.tiles_in_row):
-        #     count += 6
-        #     self._rows.addWidget(self.fill_in_row(tiles[i:count]))
         self.flow_keeper.setFixedHeight((self.tile_height + 20) * self._rows.count())
         self.set_current_tile()
 
@@ -179,10 +174,7 @@ class ListPanel(QWidget):
             child.widget().hide()
             child.widget().setParent(None)
             self._flow_layout.removeWidget(child.widget())
-            #child.widget().deleteLater()
 
-        print(self._flow_layout.columnCount())
-        print(self._flow_layout.rowCount())
         self.tiles = []
         self.current_tile_idx = 0
 
@@ -261,8 +253,6 @@ class ListPanel(QWidget):
         scroll_position = self._scroll_area.verticalScrollBar().value()
         tile_height = self.tiles[self.current_tile_idx].height()
         tile_y = self.tiles[self.current_tile_idx].parent().y()
-        print(size)
-        print(self.tiles[self.current_tile_idx].parent().y(), ':', self.tiles[self.current_tile_idx].height())
         if up and scroll_position > tile_y:
             self._scroll_area.verticalScrollBar().setValue(scroll_position - tile_height)
         elif not up and size.height() < tile_y + tile_height:

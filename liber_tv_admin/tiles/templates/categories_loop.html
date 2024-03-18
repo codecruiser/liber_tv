@@ -1,0 +1,22 @@
+{% for category in categories %}
+    <div class="card">
+        <div class="card-header" id="category{{category.id}}">
+            <h5 class="mb-0">
+            <button class="d-inline btn btn-link collapsed w-80 ltv_list_subcategory" data-category-id="{{category.id}}" data-toggle="collapse" data-target="#category_{{category.id}}" aria-expanded="false" aria-controls="category_{{category.id}}">
+                {{category.name}}
+            </button>
+            <div class="d-inline ltv_edit_subcategory" data-category-id="{{category.id}}" data-category-name="{{category.name}}" data-category-chld="{{category.children_count}}"><i class="fa fa-pencil-square-o fa-fw" aria-hidden="true"></i></div>
+            <div class="d-inline ltv_add_subcategory" data-category-id="{{category.id}}" data-category-name="{{category.name}}" data-category-chld="{{category.children_count}}"><i class="fa fa-plus fa-fw" aria-hidden="true"></i></div>
+            <div class="d-inline ltv_add_series" data-category-id="{{category.id}}" data-category-name="{{category.name}}" data-category-chld="{{category.children_count}}"><i class="fa fa-plus-square fa-fw" aria-hidden="true"></i></div>
+            <div class="d-inline ltv_add_item" data-category-id="{{category.id}}" data-category-name="{{category.name}}" data-category-chld="{{category.children_count}}"><i class="fa fa-plus-circle fa-fw" aria-hidden="true"></i></div>
+            </h5>
+        </div>
+        <div id="category_{{category.id}}" class="collapse" aria-labelledby="category{{category.id}}" data-parent="#accordion">
+            <div class="card-body">
+                {% if category.children %}
+                {% include "categories_loop.html" with categories=category.children %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endfor %}

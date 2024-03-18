@@ -1,10 +1,151 @@
-<form method="post">{% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="Save">
-</form>
+{% extends "base.html" %}
+{% block content %}
+<div id="accordion1">
+    {% include "categories_loop.html" %}
+    <div class="card-body">
+        <div class="d-inline ltv_add_subcategory" data-category-id="" data-category-name="" data-category-chld="{{categories|length}}"><i class="fa fa-plus fa-fw" aria-hidden="true"></i></div>
+    </div>
+</div>
+{% endblock %}
+{% block item_content %}
+<div class="overflow-scroll">
+<div id="accordion2">
 
-<ul>
-    {% for category in categories %}
-    <li><a href="">{{category.name}}</a></li>
-    {% endfor %}
-</ul>
+</div>
+</div>
+{% endblock %}
+
+{% block panel %}
+<div id="forms">
+    <div class="" id="categoryform_header">
+        <h5 class="accordion-header">
+        <button class="btn w-100" data-bs-toggle="collapse" data-toggle="collapse" data-target="#category_form_header" aria-expanded="false" aria-controls="category_form_header">
+            Categories
+        </button>
+        </h5>
+    </div>
+    <div id="category_form_header" class="accordion-collapse collapse show" aria-labelledby="categoryform_header" data-parent="#accordion">
+        <div class="card-body" id="category_form">
+            <div><small><i>parent:</i></small> <span id="category_parent"></span></div>
+            <form action="{% url 'category_create' %}" method="post">{% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        {{ form.name.label_tag }} {{ form.name }}
+                    </div>
+                    <div class="form-group col-md-2">
+                        {{ form.position.label_tag }} {{ form.position }}
+                    </div>
+                    <div class="form-group col-md-4">
+                        <br />
+                        <input type="submit" value="Save">
+                    </div>
+                </div>
+                {{ form.parent }}
+            </form>
+        </div>
+    </div>
+    <div class="" id="seriesform_header">
+        <h5 class="accordion-header">
+        <button class="btn w-100 collapsed" data-bs-toggle="collapse" data-toggle="collapse" data-target="#series_form_header" aria-expanded="false" aria-controls="series_form_header">
+            Series
+        </button>
+        </h5>
+    </div>
+    <div id="series_form_header" class="accordion-collapse collapse" aria-labelledby="seriesform_header" data-parent="#accordion">
+        <div class="card-body" id="series_form">
+            <div><small><i>parent:</i></small> <span id="series_category"></span></div>
+            <form action="{% url 'series_all' %}" method="post">{% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        {{ series_form.name.label_tag }} {{ series_form.name }}
+                    </div>
+                    <div class="form-group col-md-6">
+                        {{ series_form.position.label_tag }} {{ series_form.position }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        {{ series_form.address.label_tag }} {{ series_form.address }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        {{ series_form.type.label_tag }} {{ series_form.type }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        {{ series_form.description.label_tag }} {{ series_form.description }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        {{ series_form.tags.label_tag }} {{ series_form.tags }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <div id="series_form_submit">Save</div>
+                    </div>
+                </div>
+                {{ series_form.parent }}
+                {{ series_form.category }}
+            </form>
+        </div>
+    </div>
+    <div class="" id="itemsform_header">
+        <h5 class="accordion-header">
+        <button class="btn w-100 collapsed" data-bs-toggle="collapse" data-toggle="collapse" data-target="#items_form_header" aria-expanded="false" aria-controls="items_form_header">
+            Items
+        </button>
+        </h5>
+    </div>
+    <div id="items_form_header" class="accordion-collapse collapse" aria-labelledby="itemsform_header" data-parent="#accordion">
+        <div class="card-body" id="items_form">
+            <div><small><i>parent:</i></small> <span id="items_category"></span></div>
+            <form action="{% url 'items_all' %}" method="post">{% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        {{ item_form.name.label_tag }} {{ item_form.name }}
+                    </div>
+                    <div class="form-group col-md-6">
+                        {{ item_form.position.label_tag }} {{ item_form.position }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        {{ item_form.title.label_tag }} {{ item_form.title }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        {{ item_form.address.label_tag }} {{ item_form.address }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        {{ item_form.type.label_tag }} {{ item_form.type }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        {{ item_form.description.label_tag }} {{ item_form.description }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        {{ item_form.tags.label_tag }} {{ item_form.tags }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <div id="items_form_submit">Save</div>
+                    </div>
+                </div>
+                {{ item_form.serie }}
+                {{ item_form.category }}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

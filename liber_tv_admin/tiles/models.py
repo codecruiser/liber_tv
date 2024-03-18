@@ -28,8 +28,8 @@ class Series(models.Model):
     position = models.IntegerField()
     address = models.CharField(max_length=2048, null=True)
     parent = models.ForeignKey("Series", on_delete=models.CASCADE, null=True, blank=True)
-    categories = models.ManyToManyField(Category, null=True)
-    tags = models.ManyToManyField("Tag", null=True)
+    categories = models.ManyToManyField(Category, null=True, blank=True, related_name="series")
+    tags = models.ManyToManyField("Tag", null=True, blank=True, related_name="series")
 
     class Meta:
         db_table = "libertv_series"
@@ -101,9 +101,9 @@ class Item(models.Model):
     data = models.JSONField(null=True)
     position = models.IntegerField()
     type = models.ForeignKey(ItemType, on_delete=models.CASCADE)
-    series = models.ManyToManyField(Series, null=True)
-    categories = models.ManyToManyField(Category, null=True)
-    tags = models.ManyToManyField(Tag, null=True)
+    series = models.ManyToManyField(Series, blank=True, null=True)
+    categories = models.ManyToManyField(Category, blank=True, null=True)
+    tags = models.ManyToManyField(Tag, blank=True, null=True)
 
     class Meta:
         db_table = "libertv_items"
