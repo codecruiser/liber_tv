@@ -10,3 +10,9 @@
 .ltv_add_series {
     cursor: pointer;
 }
+.card_series .card-header {
+background-color: #cccccc;
+}
+.card_items .card-header {
+background-color: #d9d9d9;
+}

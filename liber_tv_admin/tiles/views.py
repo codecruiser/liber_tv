@@ -25,7 +25,8 @@ class CategoryListView(CategoryBaseView, ListView):
         for category in categories[parent]:
             data = {
                 'id': category.id,
-                'name': category.name
+                'name': category.name,
+                'parent': category.parent_id
             }
             if category.id in categories:
                 data["children"] = self.construct_tree(categories, category.id)
@@ -71,6 +72,7 @@ class ItemsView(APIView):
         items = []
         for item in Item.objects.filter(categories__id__exact=category_id).all():
             items.append({
+                'id': item.id,
                 'name': item.name,
                 'title': item.title,
             })
@@ -114,7 +116,9 @@ class SeriesView(APIView):
             series.append({
                 'id': item.id,
                 'name': item.name,
+                'parent': item.parent
             })
+
         return Response({"series": series})
 
     def post(self, request):

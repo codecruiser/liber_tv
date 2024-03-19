@@ -19,17 +19,33 @@ class LiberDB:
     def get_categories(self, parent_id=None, tags=None):
         # TODO: make it less stupid (it's more complicated than pyscopg2)
         query = QSqlQuery(self.db)
-        sql = f"select id, position, name from libertv_categories"
+        sql = f"select id, position, name, parent_id from libertv_categories "
         if parent_id:
             sql += f" where parent_id ={int(parent_id)}"
+        else:
+            sql += f" where parent_id is null"
         sql += " order by position asc"
         query.exec(sql)
         results = []
         while query.next():
             results.append({
                 "id": query.value(0),
-                "name": query.value(2)
+                "name": query.value(2),
+                "parent_id": query.value(3)
             })
+        return results
+
+    def get_parent(self, parent_id, parent_type):
+        query = QSqlQuery(self.db)
+        type = "categories" if parent_type == "category" else "items"
+        sql = f"select parent_id, name from libertv_{type} where id ={int(parent_id)}"
+        query.exec(sql)
+        results = None
+        while query.next():
+            results = {
+                "parent_id": query.value(0),
+                "name": query.value(1)
+            }
         return results
 
     def get_series(self, category_id=None, parent_id=None, tags=None):

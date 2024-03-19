@@ -1,6 +1,7 @@
 var libertv = {
 
     create_accord_item: function (parent, classname, i, id, name) {
+        console.log(i+":"+name);
         var div_card = $("<div/>");
         div_card.addClass("card");
         div_card.addClass("card_"+classname);
@@ -13,6 +14,27 @@ var libertv = {
         div_card_header_button.addClass("d-inline btn btn-link w-80 ltv_list_series");
         div_card_header_button.html(name);
         div_card_header.append(div_card_header_button);
+        var div_edit_icon = $("<div/>");
+        div_edit_icon.addClass("d-inline ltv_edit_"+classname);
+        div_edit_icon.attr("data-"+classname+"-id", id);
+        div_edit_icon.attr("data-"+classname+"-name", name);
+        div_edit_icon.html('<i class="fa fa-pencil-square-o fa-fw" aria-hidden="true"></i>');
+        div_card_header.append(div_edit_icon);
+        if(classname=="series") {
+            var div_add_sibl_icon = $("<div/>");
+            div_add_sibl_icon.addClass("d-inline ltv_add_sibl_"+classname);
+            div_add_sibl_icon.attr("data-"+classname+"-id", id);
+            div_add_sibl_icon.attr("data-"+classname+"-name", name);
+            div_edit_icon.html('<i class="fa fa-plus-square fa-fw" aria-hidden="true"></i>');
+            div_card_header.append(div_add_sibl_icon);
+
+            var div_add_icon = $("<div/>");
+            div_add_icon.addClass("d-inline ltv_add_"+classname);
+            div_add_icon.attr("data-"+classname+"-id", id);
+            div_add_icon.attr("data-"+classname+"-name", name);
+            div_edit_icon.html('<i class="fa fa-plus-circle fa-fw" aria-hidden="true"></i>');
+            div_card_header.append(div_add_icon);
+        };
         div_card.append(div_card_header);
 
         //body
@@ -21,13 +43,13 @@ var libertv = {
         if(i==0) {
             div_card_body_wrapper.addClass("show");
         }
-        var div_card_body = $("<div/>");
-        div_card_body.addClass("card-body");
-        div_card_body_wrapper.append(div_card_body);
-        div_card.append(div_card_body_wrapper);
-
+        if(classname=="series") {
+            var div_card_body = $("<div/>");
+            div_card_body.addClass("card-body");
+            div_card_body_wrapper.append(div_card_body);
+            div_card.append(div_card_body_wrapper);
+        }
         parent.append(div_card);
-
     },
     init: function () {
         $('.ltv_list_subcategory').click(function(){
@@ -35,14 +57,15 @@ var libertv = {
             $.ajax({url: "/series/"+$(this).data('category-id'), success: function(result){
                 for(var i in result.series) {
                     libertv.create_accord_item(
-                        $('#accordion2'), 'series', i, result.series[i]["id"], result.series[i]["name"]
+                        $('#accordion2'), 'series', i, result.series[i]["id"], result.series[i]["name"],
+                        result.series[i]["children"]
                     );
                 };
             }});
             $.ajax({url: "/items/"+$(this).data('category-id'), success: function(result){
-                for(var i in result.series) {
+                for(var i in result.items) {
                     libertv.create_accord_item(
-                        $('#accordion2'), 'items', i, result.series[i]["id"], result.series[i]["name"]
+                        $('#accordion2'), 'items', i, result.items[i]["id"], result.items[i]["title"]
                     );
                 };
             }});
@@ -98,7 +121,6 @@ var libertv = {
             $.ajax({
                 url: "/items/", type: "POST",
                 dataType: "json", data: fields,
-                //contentType: "application/json",
                 success: function(result){
                     alert(result.items);
                 },

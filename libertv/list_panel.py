@@ -59,7 +59,7 @@ class ListPanel(QWidget):
         self._scroll_area = QScrollArea()
         self._scroll_position = 0
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
-        # self.flow_keeper.setStyleSheet("QWidget {border: 2px solid #ff0000;}")
+        #self.flow_keeper.setStyleSheet("QWidget {border: 2px solid #ff0000;}")
         self.flow_keeper.setSizePolicy(sizePolicy)
         self.flow_keeper.setLayout(self._rows)
         self._scroll_area.setWidget(self.flow_keeper)
@@ -72,11 +72,11 @@ class ListPanel(QWidget):
 
     tile_height = 150
 
-    def get_back_tile(self):
+    def get_back_tile(self, parent_id=None, parent_type=None):
         size = self.screen().availableGeometry().size()
-        back = BackTile(f"Back")
-        back.tid = self.parent_parent_id
-        back.type = self.parent_parent_type
+        back = BackTile(f"Back", size)
+        back.tid = parent_id
+        back.type = parent_type
         back.setStyleSheet(self.css_normal_tile)
         back.setProperty("class", "tile_collector")
         back.setMaximumWidth(size.width() // self.tiles_in_row - 20)
@@ -89,10 +89,16 @@ class ListPanel(QWidget):
         size = self.screen().availableGeometry().size()
 
         tiles = []
+
         if self.parent_id:
-            tiles.append(self.get_back_tile())
+            parent_item = self.db.get_parent(parent_id=self.parent_id, parent_type=self.parent_type)
+            tiles.append(self.get_back_tile(parent_item["parent_id"], self.parent_type))
+            self._title_label.setText(parent_item["name"])
+        else:
+            self._title_label.setText("Liber TV")
+
         category_tiles = self.db.get_categories(parent_id=self.parent_id)
-        for tile in category_tiles*20:
+        for tile in category_tiles:
             category = CategoryTile(f"{tile['name']}", size)
             category.tid = tile['id']
             category.type = "category"
@@ -120,13 +126,9 @@ class ListPanel(QWidget):
     def fill_in_row(self, tiles):
         widget = QWidget()
         # widget.setStyleSheet("QWidget {border: 2px solid #00ff00;}")
-        # self.widget_row.append(widget)
 
         cols = QHBoxLayout()
-        # self.rows.append(cols)
         for item in tiles:
-            # item = self.insert_label(j)
-            # self.items.append(item)
             cols.addWidget(item)
             self.tiles.append(item)
         widget.setLayout(cols)
@@ -134,6 +136,8 @@ class ListPanel(QWidget):
         return widget
 
     def fill_panel(self, items):
+        size = self.screen().availableGeometry().size()
+
         self.empty_panel()
         self.tiles = []
         rows_count = 0
@@ -143,6 +147,7 @@ class ListPanel(QWidget):
                 widget = QWidget()
                 current_row = QHBoxLayout()
                 widget.setLayout(current_row)
+                widget.setFixedWidth(size.width()-50)
                 self._rows.addWidget(widget)
             if current_row:
                 current_row.addWidget(tile, 0, Qt.Alignment.AlignLeft)
@@ -154,99 +159,97 @@ class ListPanel(QWidget):
         self.set_current_tile()
 
     def empty_panel(self):
+        self.current_tile_idx = 0
         for i in reversed(range(self._rows.count())):
             for j in reversed(self._rows.itemAt(i).widget().children()):
                 j.deleteLater()
             self._rows.itemAt(i).widget().deleteLater()
             self._rows.removeItem(self._rows.itemAt(i))
-        #     for j in reversed(range(pp.count())):
-        #         print(pp.itemAt(j).widget())
-        #     #self._rows.itemAt(i).widget().deleteLater()
 
     def go_p(self):
         self.fill_panel(2)
 
-    def add_tiles(self):
-        size = self.screen().availableGeometry().size()
-
-        # remove children first
-        while ((child := self._flow_layout.takeAt(0)) != None):
-            child.widget().hide()
-            child.widget().setParent(None)
-            self._flow_layout.removeWidget(child.widget())
-
-        self.tiles = []
-        self.current_tile_idx = 0
-
-        counter = 0
-        row = 0
-        col = 0
-
-        if self.parent_id:  # TODO: give it a real condition
-            back = BackTile(f"Back")
-            back.tid = self.parent_parent_id
-            back.type = self.parent_parent_type
-            back.setStyleSheet(self.css_normal_tile)
-            back.setProperty("class", "tile_collector")
-            back.setMinimumWidth(100)
-            back.setMinimumHeight(200)
-            self.tiles.append(back)
-            back.show()
-            self._flow_layout.addWidget(back, row, col)
-
-            counter += 1
-            col += 1
-
-        category_tiles = self.db.get_categories(parent_id=self.parent_id)
-        for tile in category_tiles*30:  # 10 times is just for now
-            category = CategoryTile(f"{tile['name']}", size)
-            category.tid = tile['id']
-            category.type = "category"
-            category.setStyleSheet(self.css_normal_category_tile)
-            category.setMinimumWidth(size.width()//self.tiles_in_row-30)
-            category.setMinimumHeight(150)
-            self.tiles.append(category)
-            category.show()
-            self._flow_layout.addWidget(category, row, col)
-
-            counter += 1
-            col += 1
-            if counter % self.tiles_in_row == 0:
-                row += 1
-                col = 0
-
-        series_tiles = self.db.get_series(parent_id=self.parent_id)
-        for tile in series_tiles:
-            collector = CollectorTile(f"{tile['name']}")
-            collector.setStyleSheet(self.css_normal_tile)
-            collector.setProperty("class", "tile_collector")
-            collector.setMinimumWidth(100)
-            collector.setMinimumHeight(200)
-            self.tiles.append(collector)
-            self._flow_layout.addWidget(collector, row, col)
-
-            counter += 1
-            col += 1
-            if counter % self.tiles_in_row == 0:
-                row += 1
-                col = 0
-
-        item_tiles = self.db.get_items(category_id=self.parent_id)
-        for tile in item_tiles:
-            item = ItemTile(f"{tile['name']}")
-            item.setStyleSheet(self.css_normal_tile)
-            item.setProperty("class", "tile_collector")
-            item.setMinimumWidth(100)
-            item.setMinimumHeight(200)
-            self.tiles.append(item)
-            self._flow_layout.addWidget(item, row, col)
-
-            counter += 1
-            col += 1
-            if counter % self.tiles_in_row == 0:
-                row += 1
-                col = 0
-        self.set_current_tile()
+    # def add_tiles(self):
+    #     size = self.screen().availableGeometry().size()
+    #
+    #     # remove children first
+    #     while (child := self._flow_layout.takeAt(0)) != None:
+    #         child.widget().hide()
+    #         child.widget().setParent(None)
+    #         self._flow_layout.removeWidget(child.widget())
+    #
+    #     self.tiles = []
+    #     self.current_tile_idx = 0
+    #
+    #     counter = 0
+    #     row = 0
+    #     col = 0
+    #
+    #     if self.parent_id:  # TODO: give it a real condition
+    #         back = BackTile(f"Back")
+    #         back.tid = self.parent_parent_id
+    #         back.type = self.parent_parent_type
+    #         back.setStyleSheet(self.css_normal_tile)
+    #         back.setProperty("class", "tile_collector")
+    #         back.setMinimumWidth(100)
+    #         back.setMinimumHeight(200)
+    #         self.tiles.append(back)
+    #         back.show()
+    #         self._flow_layout.addWidget(back, row, col)
+    #
+    #         counter += 1
+    #         col += 1
+    #
+    #     category_tiles = self.db.get_categories(parent_id=self.parent_id)
+    #     for tile in category_tiles:  # 10 times is just for now
+    #         category = CategoryTile(f"{tile['name']}", size)
+    #         category.tid = tile['id']
+    #         category.type = "category"
+    #         category.setStyleSheet(self.css_normal_category_tile)
+    #         category.setMinimumWidth(size.width()//self.tiles_in_row-30)
+    #         category.setMinimumHeight(150)
+    #         self.tiles.append(category)
+    #         category.show()
+    #         self._flow_layout.addWidget(category, row, col)
+    #
+    #         counter += 1
+    #         col += 1
+    #         if counter % self.tiles_in_row == 0:
+    #             row += 1
+    #             col = 0
+    #
+    #     series_tiles = self.db.get_series(parent_id=self.parent_id)
+    #     for tile in series_tiles:
+    #         collector = CollectorTile(f"{tile['name']}")
+    #         collector.setStyleSheet(self.css_normal_tile)
+    #         collector.setProperty("class", "tile_collector")
+    #         collector.setMinimumWidth(100)
+    #         collector.setMinimumHeight(200)
+    #         self.tiles.append(collector)
+    #         self._flow_layout.addWidget(collector, row, col)
+    #
+    #         counter += 1
+    #         col += 1
+    #         if counter % self.tiles_in_row == 0:
+    #             row += 1
+    #             col = 0
+    #
+    #     item_tiles = self.db.get_items(category_id=self.parent_id)
+    #     for tile in item_tiles:
+    #         item = ItemTile(f"{tile['name']}")
+    #         item.setStyleSheet(self.css_normal_tile)
+    #         item.setProperty("class", "tile_collector")
+    #         item.setMinimumWidth(100)
+    #         item.setMinimumHeight(200)
+    #         self.tiles.append(item)
+    #         self._flow_layout.addWidget(item, row, col)
+    #
+    #         counter += 1
+    #         col += 1
+    #         if counter % self.tiles_in_row == 0:
+    #             row += 1
+    #             col = 0
+    #     self.set_current_tile()
 
     def move_scroll(self, up=False):
         size = self._scroll_area.screen().availableGeometry().size()
@@ -264,7 +267,6 @@ class ListPanel(QWidget):
 
     def set_current_tile(self):
         if self.tiles:
-            print(f":::{self.current_tile_idx}:::")
             self.tiles[self.current_tile_idx].setStyleSheet(self.css_selected_category_tile)
 
     def go_enter_key(self):
@@ -272,6 +274,8 @@ class ListPanel(QWidget):
         self.parent_parent_type = self.parent_type
         self.parent_id = self.tiles[self.current_tile_idx].tid
         self.parent_type = self.tiles[self.current_tile_idx].type
+        # print(f"parent parent: {self.parent_parent_id} ({self.parent_parent_type})")
+        # print(f"parent: {self.parent_id} ({self.parent_type})")
         self.fill_panel(self.get_tiles())
 
     def go_right(self):
